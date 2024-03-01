@@ -1,0 +1,18 @@
+[package]
+name = "routercli"
+description = "eBFP-XDP-Router control client"
+version = "0.1.0"
+authors = ["gediminas.luzys@gmail.com"]
+license = "MIT"
+edition = "2021"
+
+[[bin]]
+name = "routerctl"
+path = "client.rs"
+
+[dependencies]
+anyhow = "1.0.80"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+
+router-common = { path = "../router-common", features = ["user"] }

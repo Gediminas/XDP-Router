@@ -1,0 +1,17 @@
+[package]
+name = "router-common"
+version = "0.1.0"
+authors = ["gediminas.luzys@gmail.com"]
+license = "MIT"
+edition = "2021"
+
+[lib]
+path = "common.rs"
+
+[features]
+default = []
+user = ["aya", "serde"]
+
+[dependencies]
+aya = { git = "https://github.com/aya-rs/aya", optional = true }
+serde = { version = "1.0.197", features = ["derive"], optional = true }

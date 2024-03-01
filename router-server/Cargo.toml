@@ -1,0 +1,25 @@
+[package]
+name = "router"
+description = "eBFP-XDP-Router server"
+version = "0.1.0"
+authors = ["gediminas.luzys@gmail.com"]
+license = "MIT"
+edition = "2021"
+
+[[bin]]
+name = "router"
+path = "server.rs"
+
+[dependencies]
+aya = { git = "https://github.com/aya-rs/aya", features = ["async_tokio"] }
+aya-log = { git = "https://github.com/aya-rs/aya" }
+
+anyhow = "1.0.80"
+clap = { version = "4.5.1", features = ["derive"] }
+flexi_logger = { version = "0.27.4", features = ["async"] }
+log = "0.4.21"
+serde_json = "1.0.114"
+sudo = "0.6.0"
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "net", "time", "signal", "sync", "io-util"] }
+
+router-common = { path = "../router-common", features = ["user"] }
