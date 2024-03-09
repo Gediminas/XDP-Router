@@ -16,10 +16,14 @@ aya-log = { git = "https://github.com/aya-rs/aya" }
 
 anyhow = "1.0.80"
 clap = { version = "4.5.1", features = ["derive"] }
-flexi_logger = { version = "0.27.4", features = ["async"] }
 log = "0.4.21"
 serde_json = "1.0.114"
 sudo = "0.6.0"
 tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "net", "time", "signal", "sync", "io-util"] }
+
+# musl build fails: thread 'flexi_logger-flusher' has overflowed its stack
+# https://github.com/emabee/flexi_logger/issues/95
+# dont_minimize_extra_stacks
+flexi_logger = { version = "0.27.4", features = ["async", "dont_minimize_extra_stacks"] }
 
 router-common = { path = "../router-common", features = ["user"] }
