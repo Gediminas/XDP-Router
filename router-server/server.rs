@@ -21,6 +21,7 @@ pub type Result<T> = std::result::Result<T, anyhow::Error>;
 async fn main() -> Result<()> {
     let args = args::parse();
     let logger = Logger::build(&args.log_level, &args.log_colored)?;
+    log::info!("{args:?}");
 
     if let Err(e) = run_server(&args.iface, &args.bind).await {
         log::error!("FATAL: {e}");

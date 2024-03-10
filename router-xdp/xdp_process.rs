@@ -51,7 +51,7 @@ fn process_udp(ctx: &XdpContext, offset: usize, ip: &mut Ipv4Hdr, eth: &mut EthH
     let udp: &mut UdpHdr = get_at_mut(ctx, offset)?;
 
     #[rustfmt::skip]
-    trace!(ctx, "inbound UDP {:i}:{} --> {:i}:{} [0x{:x}] TTL:{}", u32::from_be(ip.src_addr), u16::from_be(udp.source), u32::from_be(ip.dst_addr), u16::from_be(udp.dest), u8::from_be(ip.ttl), u16::from_be(ip.check) );
+    trace!(ctx, "inbound UDP {:i}:{} --> {:i}:{} [0x{:x}] TTL:{}", u32::from_be(ip.src_addr), u16::from_be(udp.source), u32::from_be(ip.dst_addr), u16::from_be(udp.dest), u16::from_be(ip.check), u8::from_be(ip.ttl) );
 
     // TEST: Mirror
     if udp.dest == 65500_u16.to_be() {
@@ -60,8 +60,10 @@ fn process_udp(ctx: &XdpContext, offset: usize, ip: &mut Ipv4Hdr, eth: &mut EthH
         mem::swap(&mut ip.src_addr, &mut ip.dst_addr);
         mem::swap(&mut udp.source, &mut udp.dest);
 
+        //TODO: Decrement TTL and adjust checksum
+
         #[rustfmt::skip]
-        warn!(ctx, " > XDP_TX   {:i}:{} --> {:i}:{} [0x{:x}]", u32::from_be(ip.src_addr), u16::from_be(udp.source), u32::from_be(ip.dst_addr), u16::from_be(udp.dest), u16::from_be(ip.check), );
+        warn!(ctx, " > XDP_TX   {:i}:{} --> {:i}:{} [0x{:x}] TTL:{}", u32::from_be(ip.src_addr), u16::from_be(udp.source), u32::from_be(ip.dst_addr), u16::from_be(udp.dest), u16::from_be(ip.check), u8::from_be(ip.ttl) );
         return Ok(xdp_action::XDP_TX);
     }
 
@@ -74,8 +76,10 @@ fn process_udp(ctx: &XdpContext, offset: usize, ip: &mut Ipv4Hdr, eth: &mut EthH
                 mem::swap(&mut ip.src_addr, &mut ip.dst_addr);
                 mem::swap(&mut udp.source, &mut udp.dest);
 
+                //TODO: Decrement TTL and adjust checksum
+
                 #[rustfmt::skip]
-                warn!(ctx, " > XDP_TX   {:i}:{} --> {:i}:{} [0x{:x}]", u32::from_be(ip.src_addr), u16::from_be(udp.source), u32::from_be(ip.dst_addr), u16::from_be(udp.dest), u16::from_be(ip.check), );
+                warn!(ctx, " > XDP_TX   {:i}:{} --> {:i}:{} [0x{:x}] TTL:{}", u32::from_be(ip.src_addr), u16::from_be(udp.source), u32::from_be(ip.dst_addr), u16::from_be(udp.dest), u16::from_be(ip.check), u8::from_be(ip.ttl) );
                 return Ok(xdp_action::XDP_TX);
             }
         }

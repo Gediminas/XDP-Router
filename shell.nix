@@ -16,13 +16,7 @@ mkShell {
 
   shellHook = ''
     if ! cargo version 2> /dev/null || [ ! -f ".prepared_rustup" ]; then
-      echo "Installing rustup"
-      rustup default stable
-      rustup target add x86_64-unknown-linux-gnu
-      rustup target add x86_64-unknown-linux-musl
-      rustup toolchain install nightly
-      rustup component add rust-src
-      rustup component add rust-analyzer
+      ./asset/prepare_rustup.sh
       touch .prepared_rustup
     fi
 
