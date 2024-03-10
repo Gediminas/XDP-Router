@@ -20,15 +20,17 @@ Vagrant.configure("2") do |config|
     server.vm.provider :virtualbox do |vbox|
       vbox.cpus   = 4
       vbox.memory = 2048
-      vbox.gui    = false
+      vbox.customize ["modifyvm", :id, "--ioapic", "on"] # Enable all cores
     end
+
+    server.vm.post_up_message = "vagrant ssh server (#{SERVER_IP})"
   end
 
   config.vm.define "client" do |client|
     client.vm.hostname = "xdp-router-client"
     client.vm.network "private_network", ip: CLIENT_IP
     client.vm.provision :shell, :path => "./asset/setup_client.sh"
+    client.vm.post_up_message = "vagrant ssh client (#{CLIENT_IP})"
   end
 
-  config.vm.post_up_message = "vagrant ssh server (#{SERVER_IP})\nvagrant ssh client (#{CLIENT_IP})"
 end

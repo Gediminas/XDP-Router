@@ -1,11 +1,11 @@
 #![deny(clippy::unwrap_used)]
 
 use anyhow::bail;
-use router_common::{Policy, RouteCmd};
+use router_common::{HalfRoute, Policy, RouteCmd};
 use std::{
     env,
     io::{Read, Write},
-    net::{SocketAddr, TcpStream},
+    net::{Ipv4Addr, SocketAddr, TcpStream},
     time::Duration,
 };
 
@@ -13,42 +13,6 @@ pub type Result<T> = std::result::Result<T, anyhow::Error>;
 
 const STREAM_READ_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));
 const STREAM_WRITE_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));
-
-fn parse_args() -> Result<(SocketAddr, RouteCmd)> {
-    let mut args = env::args().skip(1);
-    let endpoint = args.next().expect("Router IP").parse::<SocketAddr>()?;
-    let action = args.next();
-    let object = args.next();
-
-    let command = match (action.as_deref(), object.as_deref()) {
-        (Some("set"), Some("policy")) => {
-            let policy = match args.next().as_deref() {
-                Some("accept") => Policy::Accept,
-                Some("drop") => Policy::Drop,
-                _ => bail!("Expected drop/accept"),
-            };
-            RouteCmd::SetPolicy { policy }
-        }
-        (Some("add"), Some("mirror")) => {
-            let port = match args.next() {
-                Some(p) => p.parse::<u16>()?,
-                None => bail!("Expected port"),
-            };
-            RouteCmd::AddMirror { port }
-        }
-        (Some("rem"), Some("mirror")) => {
-            let port = match args.next() {
-                Some(p) => p.parse::<u16>()?,
-                None => bail!("Expected port"),
-            };
-            RouteCmd::RemMirror { port }
-        }
-        (Some("list"), Some("mirrors")) => RouteCmd::ListMirrors,
-        _ => bail!("Unknown or incomplete command provided"),
-    };
-
-    Ok((endpoint, command))
-}
 
 fn main() -> Result<()> {
     let (router, command) = parse_args()?;
@@ -71,4 +35,59 @@ fn main() -> Result<()> {
     println!("{res}");
 
     Ok(())
+}
+
+fn parse_args() -> Result<(SocketAddr, RouteCmd)> {
+    let mut args = env::args().skip(1);
+    let endpoint = args.next().expect("Router IP").parse::<SocketAddr>()?;
+    let action = args.next();
+    let object = args.next();
+
+    let command = match (action.as_deref(), object.as_deref()) {
+        (Some("set"), Some("policy")) => {
+            let policy = match args.next().as_deref() {
+                Some("accept") => Policy::Accept,
+                Some("drop") => Policy::Drop,
+                _ => bail!("Expected drop/accept"),
+            };
+            RouteCmd::SetPolicy { policy }
+        }
+        (Some("add"), Some("mirror")) => RouteCmd::AddMirror {
+            port: get_port(args.next())?,
+        },
+        (Some("rem"), Some("mirror")) => RouteCmd::RemMirror {
+            port: get_port(args.next())?,
+        },
+        (Some("list"), Some("mirrors")) => RouteCmd::ListMirrors,
+        (Some("add"), Some("route")) => RouteCmd::AddRoute {
+            half1: HalfRoute {
+                reflexive_addr: get_addr(args.next())?,
+                reflexive_port: get_port(args.next())?,
+                router_port: get_port(args.next())?,
+            },
+            half2: HalfRoute {
+                reflexive_addr: get_addr(args.next())?,
+                reflexive_port: get_port(args.next())?,
+                router_port: get_port(args.next())?,
+            },
+        },
+        _ => bail!("Unknown or incomplete command provided"),
+    };
+
+    Ok((endpoint, command))
+}
+
+fn get_addr(a: Option<String>) -> Result<u32> {
+    let ip = match a {
+        Some(p) => p.parse::<Ipv4Addr>()?,
+        None => bail!("Expected address"),
+    };
+    Ok(ip.into())
+}
+
+fn get_port(a: Option<String>) -> Result<u16> {
+    Ok(match a {
+        Some(p) => p.parse::<u16>()?,
+        None => bail!("Expected port"),
+    })
 }

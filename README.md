@@ -9,8 +9,11 @@ The project is composed of three main components:
 - **router**: A server application that loads the XDP program, manages XDP routing maps, and listens for TCP commands
 - **routerctl**: A TCP client for managing the server
 
-UDP packet mirroring/pong demo:
-![demo1](./doc/demo1.png)
+UDP packet **mirroring/pong** demo:
+![demo1](./doc/demo_mirroring.png)
+
+UDP packet **routing** demo:
+![demo1](./doc/demo_routing.png)
 
 ## Build and Run locally
 

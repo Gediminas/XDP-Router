@@ -7,7 +7,7 @@ use aya::{
 };
 use aya_log::BpfLogger;
 use log::debug;
-use router_common::{GlobalRule, RouteCmd};
+use router_common::{GlobalRule, HalfRoute, RouteCmd};
 
 pub type Result<T> = std::result::Result<T, anyhow::Error>;
 
@@ -48,11 +48,19 @@ pub fn exec(bpf: &mut Bpf, cmd: RouteCmd) -> Result<String> {
             Ok("OK".to_owned())
         }
         RouteCmd::ListMirrors => Ok("Not implemented".to_owned()),
-        RouteCmd::AddRedirect { addr: _, port: _ } => Ok("Not implemented".to_owned()),
-        RouteCmd::AddRoute {
-            proxy_port: _,
-            dest_addr: _,
-            dest_port: _,
-        } => Ok("Not implemented".to_owned()),
+        RouteCmd::AddRoute { half1, half2 } => {
+            let mut xdp_routes: HashMap<&mut MapData, HalfRoute, HalfRoute> =
+                HashMap::try_from(bpf.map_mut("XDP_ROUTER_ROUTES").unwrap())?;
+            xdp_routes.insert(half1.to_be(), half2.to_be(), 0)?;
+            xdp_routes.insert(half2.to_be(), half1.to_be(), 0)?;
+            Ok("OK".to_owned())
+        }
+        RouteCmd::RemRoute { half1, half2 } => {
+            let mut xdp_routes: HashMap<&mut MapData, HalfRoute, HalfRoute> =
+                HashMap::try_from(bpf.map_mut("XDP_ROUTER_ROUTES").unwrap())?;
+            xdp_routes.remove(&half1.to_be())?;
+            xdp_routes.remove(&half2.to_be())?;
+            Ok("OK".to_owned())
+        }
     }
 }
