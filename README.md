@@ -2,18 +2,52 @@
 
 ## Description
 
-A **Rust** toy/demo project utilizing **eBPF XDP** for high-performance packet routing at the network driver level.
+A **Rust** toy/demo project leveraging **eBPF XDP** for high-performance packet routing at the Linux kernel level, specifically at the earliest possible point in the network stack.
 
-The project is composed of three main components:
-- **router_xdp**: The core eBPF XDP program handling packet routing
-- **router**: A server application that loads the XDP program, manages XDP routing maps, and listens for TCP commands
-- **routerctl**: A TCP client for managing the server
+The project comprises three main components:
+- **router_xdp**: The core program implementing UDP packet routing with eBPF XDP
+- **router**: A server application that loads the eBPF XDP program into the kernel, manages XDP routing maps, and listens for TCP commands
+- **routerctl**: A client for remotely managing the server over TCP (no TLS currently)
 
-UDP packet **mirroring/pong** demo:
+
+### UDP packet **mirroring/pong** demo:
+
 ![demo1](./doc/demo_mirroring.png)
 
-UDP packet **routing** demo:
+Server (`192.168.171.10`):
+  ```sh
+  sudo router --iface eth1 --bind 0.0.0.0:6707
+  ```
+
+Client (`192.168.171.1`):
+  ```sh
+  routerctl 192.168.171.10:6707 set policy drop
+  routerctl 192.168.171.10:6707 add mirror 12345
+  nc -u 192.168.171.10 12345
+  ```
+
+
+### UDP packet **routing** demo:
+
 ![demo1](./doc/demo_routing.png)
+
+Server (`192.168.171.10`):
+  ```sh
+  sudo router --iface eth1 --bind 0.0.0.0:6707
+  ```
+
+Client-1 (`192.168.171.1:1111`):
+  ```sh
+  routerctl 192.168.171.10:6707 set policy drop
+  routerctl 192.168.171.10:6707 add route  192.168.171.1 1111 12345  192.168.171.1 2222 12345
+  nc -u -p 1111 192.168.171.10 12345
+  ```
+
+Client-2 (`192.168.171.1:2222`):
+  ```sh
+  nc -u -p 2222 192.168.171.10 12345
+  ```
+
 
 ## Build and Run locally
 
